@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les sons du français — Phonétique interactive</title>
+<style>
+  :root {
+    --violet: #7b2d8b;
+    --violet-light: #a855c5;
+    --violet-pale: #f3e8f9;
+    --pink: #e91e8c;
+    --pink-light: #fce4f3;
+    --teal: #00897b;
+    --teal-light: #e0f2f1;
+    --amber: #f59e0b;
+    --amber-light: #fef3c7;
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --header-bg: #4a0070;
+    --row-hover: #fdf4ff;
+    --word-bg: #fff;
+    --word-border: #d8b4fe;
+    --word-hover-bg: #7b2d8b;
+    --word-hover-color: #fff;
+    --playing-bg: #e91e8c;
+    --playing-color: #fff;
+    --shadow: 0 2px 8px rgba(123,45,139,0.12);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #f9f0ff 0%, #fce4f3 50%, #e8f4fd 100%);
+    min-height: 100vh;
+    color: #222;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--header-bg) 0%, #9c27b0 60%, var(--pink) 100%);
+    color: #fff;
+    padding: 28px 32px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 20px rgba(74,0,112,0.35);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-icon {
+    font-size: 3rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+  header h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    font-size: 0.9rem;
+    opacity: 0.85;
+    margin-top: 3px;
+  }
+  .tts-hint {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+  }
+  .tts-hint::before { content: "🔊"; font-size: 1rem; }
+
+  /* ── VOICE SELECTOR ── */
+  .voice-bar {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #e0d0f0;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: var(--violet);
+    flex-wrap: wrap;
+  }
+  .voice-bar label { font-weight: 600; }
+  .voice-bar select {
+    border: 1.5px solid var(--word-border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    color: var(--violet);
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+  }
+  .voice-bar select:focus { border-color: var(--violet); }
+  .speed-controls { display: flex; align-items: center; gap: 8px; }
+  .speed-btn {
+    background: var(--violet-pale);
+    border: 1.5px solid var(--word-border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    color: var(--violet);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .speed-btn:hover, .speed-btn.active {
+    background: var(--violet);
+    color: #fff;
+    border-color: var(--violet);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── SECTION CARDS ── */
+  .section-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1px solid rgba(123,45,139,0.08);
+  }
+  .section-card.full-width { grid-column: 1 / -1; }
+
+  .section-title {
+    padding: 14px 20px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title.voyelles { background: linear-gradient(90deg, var(--violet) 0%, var(--violet-light) 100%); }
+  .section-title.semi { background: linear-gradient(90deg, var(--teal) 0%, #26a69a 100%); }
+  .section-title.consonnes { background: linear-gradient(90deg, var(--pink) 0%, #f06292 100%); }
+
+  /* ── TABLE HEADER ── */
+  .tbl-head {
+    display: grid;
+    grid-template-columns: 44px 1fr 1.4fr;
+    background: rgba(0,0,0,0.04);
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+  }
+  .tbl-head span {
+    padding: 8px 12px;
+    border-right: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* ── ROWS ── */
+  .sound-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 1.4fr;
+    border-bottom: 1px solid rgba(123,45,139,0.07);
+    transition: background 0.15s;
+  }
+  .sound-row:last-child { border-bottom: none; }
+  .sound-row:hover { background: var(--row-hover); }
+
+  .cell {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    border-right: 1px solid rgba(123,45,139,0.07);
+    font-size: 0.85rem;
+  }
+  .cell:last-child { border-right: none; }
+
+  /* ── PLAY BUTTON ── */
+  .cell-play {
+    justify-content: center;
+    padding: 8px 4px;
+  }
+  .play-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--violet-pale);
+    color: var(--violet);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .play-btn:hover {
+    background: var(--violet);
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(123,45,139,0.3);
+  }
+  .play-btn.playing {
+    background: var(--playing-bg);
+    color: #fff;
+    animation: pulse 0.6s ease-in-out infinite alternate;
+  }
+
+  /* ── GRAPHIE SURLIGNÉE (gras comme dans le manuel) ── */
+  .word-chip b {
+    font-weight: 900;
+    color: var(--violet);
+    font-style: normal;
+  }
+  .word-chip:hover b,
+  .word-chip.playing b {
+    color: rgba(255, 255, 255, 0.95);
+  }
+  .word-chip .ct { display: inline; }
+
+  /* ── GRAPHIES ── */
+  .graphie {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #555;
+    background: #f8f8f8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+  }
+
+  /* ── CLICKABLE WORDS ── */
+  .word-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 8px;
+    background: var(--word-bg);
+    border: 1.5px solid var(--word-border);
+    border-radius: 20px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .word-chip::before {
+    content: "▶";
+    font-size: 0.6rem;
+    color: var(--violet-light);
+    transition: color 0.15s;
+  }
+  .word-chip:hover {
+    background: var(--word-hover-bg);
+    color: var(--word-hover-color);
+    border-color: var(--word-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(123,45,139,0.25);
+  }
+  .word-chip:hover::before { color: rgba(255,255,255,0.8); }
+  .word-chip.playing {
+    background: var(--playing-bg);
+    color: var(--playing-color);
+    border-color: var(--playing-bg);
+    box-shadow: 0 0 0 3px rgba(233,30,140,0.2);
+    animation: pulse 0.6s ease-in-out infinite alternate;
+  }
+  .word-chip.playing::before { content: "♪"; color: rgba(255,255,255,0.9); }
+
+  @keyframes pulse {
+    from { box-shadow: 0 0 0 0px rgba(233,30,140,0.3); }
+    to   { box-shadow: 0 0 0 6px rgba(233,30,140,0.0); }
+  }
+
+  /* ── SECTION VOWELS NASALES ── */
+  .nasales-label {
+    grid-column: 1 / -1;
+    background: var(--violet-pale);
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--violet);
+    border-bottom: 1px solid rgba(123,45,139,0.1);
+  }
+  .orales-label {
+    grid-column: 1 / -1;
+    background: #f0fdf4;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--teal);
+    border-bottom: 1px solid rgba(0,137,123,0.12);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.78rem;
+    color: #999;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .section-card.full-width { grid-column: 1; }
+    header { flex-wrap: wrap; }
+    .tts-hint { margin-left: 0; width: 100%; }
+  }
+
+  /* ── TOAST NOTIFICATION ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(74,0,112,0.9);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🔊</div>
+  <div>
+    <h1>Les sons du français</h1>
+    <p>Phonétique interactive — Cliquez sur un mot pour l'écouter</p>
+  </div>
+  <div class="tts-hint">Cliquez sur n'importe quel mot ou son</div>
+</header>
+
+<div class="voice-bar">
+  <label>🗣 Voix :</label>
+  <select id="voiceSelect"><option>Chargement…</option></select>
+  <div class="speed-controls">
+    <span style="font-weight:600">Vitesse :</span>
+    <button class="speed-btn" data-speed="0.6">Lente</button>
+    <button class="speed-btn active" data-speed="1.0">Normale</button>
+    <button class="speed-btn" data-speed="1.4">Rapide</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ═══════════════════════════════════════════
+     VOYELLES ORALES + NASALES
+════════════════════════════════════════════ -->
+<div class="section-card">
+  <div class="section-title voyelles">
+    <span>🔵</span> Les voyelles
+  </div>
+  <div class="tbl-head">
+    <span>🔊</span><span>Ça s'écrit…</span><span>Comme dans…</span>
+  </div>
+
+  <!-- ORALES LABEL -->
+  <div class="orales-label" style="grid-column:1/-1">Voyelles orales</div>
+
+  <!-- [i] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="île" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">i, î, y, ï</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="il"><span class="ct"><b>i</b>l</span></span>
+      <span class="word-chip" data-word="une île"><span class="ct">une <b>î</b>le</span></span>
+      <span class="word-chip" data-word="le maïs"><span class="ct">le ma<b>ï</b>s</span></span>
+      <span class="word-chip" data-word="un stylo"><span class="ct">un st<b>y</b>lo</span></span>
+    </div>
+  </div>
+  <!-- [e] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="été" title="Écouter ce son">▶</button></div>
+    <div class="cell">
+      <span class="graphie">es, er, ez, ed</span>
+      <span class="graphie">ef, et</span>
+      <span class="graphie">é, è, è, ai, ay</span>
+      <span class="graphie">est</span>
+    </div>
+    <div class="cell">
+      <span class="word-chip" data-word="les"><span class="ct">l<b>es</b></span></span>
+      <span class="word-chip" data-word="parler"><span class="ct">parl<b>er</b></span></span>
+      <span class="word-chip" data-word="un nez"><span class="ct">un n<b>ez</b></span></span>
+      <span class="word-chip" data-word="un pied"><span class="ct">un pi<b>ed</b></span></span>
+      <span class="word-chip" data-word="une clef"><span class="ct">une cl<b>ef</b></span></span>
+      <span class="word-chip" data-word="un dessin"><span class="ct">un d<b>es</b>sin</span></span>
+      <span class="word-chip" data-word="un été"><span class="ct">un <b>é</b>t<b>é</b></span></span>
+      <span class="word-chip" data-word="fêter"><span class="ct">f<b>ê</b>ter</span></span>
+      <span class="word-chip" data-word="je vais"><span class="ct">je v<b>ai</b>s</span></span>
+      <span class="word-chip" data-word="payer"><span class="ct">p<b>ay</b>er</span></span>
+      <span class="word-chip" data-word="c'est"><span class="ct">c'<b>est</b></span></span>
+    </div>
+  </div>
+  <!-- [ɛ] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="être" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">ê, è, ei, est</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="un père"><span class="ct">un <b>p</b>è<b>r</b>e</span></span>
+      <span class="word-chip" data-word="une fête"><span class="ct">une f<b>ê</b>te</span></span>
+      <span class="word-chip" data-word="la neige"><span class="ct">la n<b>ei</b>ge</span></span>
+      <span class="word-chip" data-word="faire"><span class="ct">f<b>ai</b>re</span></span>
+      <span class="word-chip" data-word="c'est"><span class="ct">c'est</span></span>
+    </div>
+  </div>
+  <!-- [a] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="patte" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">a, à, â</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="Il a mangé des pâtes à l'école"><span class="ct">Il <b>a</b> mangé des p<b>â</b>tes <b>à</b> l'école.</span></span>
+    </div>
+  </div>
+  <!-- [y] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="lune" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">u, û, eu</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="une jupe"><span class="ct">une j<b>u</b>pe</span></span>
+      <span class="word-chip" data-word="une flûte"><span class="ct">une fl<b>û</b>te</span></span>
+      <span class="word-chip" data-word="j'ai eu"><span class="ct">j'ai <b>eu</b></span></span>
+    </div>
+  </div>
+  <!-- [ə] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="menu" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">e</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="le"><span class="ct">l<b>e</b></span></span>
+      <span class="word-chip" data-word="petit"><span class="ct">p<b>e</b>tit</span></span>
+      <span class="word-chip" data-word="vendredi"><span class="ct">v<b>e</b>ndr<b>e</b>di</span></span>
+    </div>
+  </div>
+  <!-- [ø] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="jeu" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">eu, œu</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="peu"><span class="ct">p<b>eu</b></span></span>
+      <span class="word-chip" data-word="un vœu"><span class="ct">un v<b>œu</b></span></span>
+      <span class="word-chip" data-word="une coiffeuse"><span class="ct">une coiff<b>eu</b>se</span></span>
+      <span class="word-chip" data-word="des œufs"><span class="ct">des <b>œu</b>fs</span></span>
+    </div>
+  </div>
+  <!-- [œ] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="peur" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">eu, œu, oe, œ</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="peur"><span class="ct">p<b>eu</b>r</span></span>
+      <span class="word-chip" data-word="un œuf"><span class="ct">un <b>œu</b>f</span></span>
+      <span class="word-chip" data-word="un accueil"><span class="ct">un acc<b>ueil</b></span></span>
+      <span class="word-chip" data-word="un œil"><span class="ct">un <b>œi</b>l</span></span>
+    </div>
+  </div>
+  <!-- [u] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="loup" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">ou, où, oû</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="un loup"><span class="ct">un l<b>ou</b>p</span></span>
+      <span class="word-chip" data-word="goûter"><span class="ct">g<b>oû</b>ter</span></span>
+      <span class="word-chip" data-word="tu vas où"><span class="ct">tu vas <b>où</b> ?</span></span>
+    </div>
+  </div>
+  <!-- [o] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="eau" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">o, ô, au, eau</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="une moto"><span class="ct">une m<b>o</b>t<b>o</b></span></span>
+      <span class="word-chip" data-word="une rose"><span class="ct">une r<b>o</b>se</span></span>
+      <span class="word-chip" data-word="tôt"><span class="ct">t<b>ô</b>t</span></span>
+      <span class="word-chip" data-word="des journaux"><span class="ct">des journ<b>au</b>x</span></span>
+      <span class="word-chip" data-word="un bateau"><span class="ct">un bat<b>eau</b></span></span>
+    </div>
+  </div>
+  <!-- [ɔ] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="porte" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">o, u(m)</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="une porte"><span class="ct">une p<b>o</b>rte</span></span>
+      <span class="word-chip" data-word="un aquarium"><span class="ct">un aquari<b>um</b></span></span>
+    </div>
+  </div>
+
+  <!-- NASALES LABEL -->
+  <div class="nasales-label">Voyelles nasales</div>
+
+  <!-- [ɑ̃] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="enfant" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">an, am, on, em, (l)ent</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="sans"><span class="ct">s<b>an</b>s</span></span>
+      <span class="word-chip" data-word="une chambre"><span class="ct">une ch<b>am</b>bre</span></span>
+      <span class="word-chip" data-word="lent"><span class="ct">l<b>en</b>t</span></span>
+      <span class="word-chip" data-word="le temps"><span class="ct">le t<b>em</b>ps</span></span>
+      <span class="word-chip" data-word="un client"><span class="ct">un cli<b>en</b>t</span></span>
+    </div>
+  </div>
+  <!-- [ɛ̃] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="vin" title="Écouter ce son">▶</button></div>
+    <div class="cell">
+      <span class="graphie">in, im</span>
+      <span class="graphie">yn, ym</span>
+      <span class="graphie">un, um</span>
+      <span class="graphie">ein, ain, aim, oin</span>
+      <span class="graphie">(l)ien, (l)en…</span>
+    </div>
+    <div class="cell">
+      <span class="word-chip" data-word="un matin"><span class="ct">un mat<b>in</b></span></span>
+      <span class="word-chip" data-word="important"><span class="ct"><b>im</b>portant</span></span>
+      <span class="word-chip" data-word="synthèse"><span class="ct">s<b>yn</b>thèse</span></span>
+      <span class="word-chip" data-word="sympa"><span class="ct">s<b>ym</b>pa</span></span>
+      <span class="word-chip" data-word="lundi"><span class="ct">l<b>un</b>di</span></span>
+      <span class="word-chip" data-word="un parfum"><span class="ct">un parf<b>um</b></span></span>
+      <span class="word-chip" data-word="plein"><span class="ct">pl<b>ein</b></span></span>
+      <span class="word-chip" data-word="Reims"><span class="ct">R<b>eim</b>s</span></span>
+      <span class="word-chip" data-word="une main"><span class="ct">une m<b>ain</b></span></span>
+      <span class="word-chip" data-word="la faim"><span class="ct">la f<b>aim</b></span></span>
+      <span class="word-chip" data-word="loin"><span class="ct">l<b>oin</b></span></span>
+      <span class="word-chip" data-word="bien"><span class="ct">b<b>ien</b></span></span>
+      <span class="word-chip" data-word="un citoyen"><span class="ct">un citoy<b>en</b></span></span>
+      <span class="word-chip" data-word="coréen"><span class="ct">cor<b>éen</b></span></span>
+      <span class="word-chip" data-word="un examen"><span class="ct">un exam<b>en</b></span></span>
+    </div>
+  </div>
+  <!-- [ɔ̃] -->
+  <div class="sound-row">
+    <div class="cell cell-play"><button class="play-btn" data-word="bon" title="Écouter ce son">▶</button></div>
+    <div class="cell"><span class="graphie">on, om</span></div>
+    <div class="cell">
+      <span class="word-chip" data-word="ils sont"><span class="ct">ils s<b>on</b>t</span></span>
+      <span class="word-chip" data-word="un nom"><span class="ct">un n<b>om</b></span></span>
+    </div>
+  </div>
+
+</div><!-- /voyelles -->
+
+
+<!-- ═══════════════════════════════════════════
+     COLONNE DROITE : SEMI-VOYELLES + CONSONNES
+════════════════════════════════════════════ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+
+  <!-- SEMI-VOYELLES -->
+  <div class="section-card">
+    <div class="section-title semi">
+      <span>🟢</span> Les semi-voyelles
+    </div>
+    <div class="tbl-head">
+      <span>🔊</span><span>Ça s'écrit…</span><span>Comme dans…</span>
+    </div>
+    <!-- [ɥ] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="nuit" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">u (+ voyelle orale)</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="lui"><span class="ct">l<b>u</b>i</span></span>
+        <span class="word-chip" data-word="tuer"><span class="ct">t<b>u</b>er</span></span>
+      </div>
+    </div>
+    <!-- [w] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="oui" title="Écouter ce son">▶</button></div>
+      <div class="cell">
+        <span class="graphie">ou (+ voy. orale)</span>
+        <span class="graphie">oi, oy, w</span>
+      </div>
+      <div class="cell">
+        <span class="word-chip" data-word="oui"><span class="ct"><b>ou</b>i</span></span>
+        <span class="word-chip" data-word="une voiture"><span class="ct">une v<b>oi</b>ture</span></span>
+        <span class="word-chip" data-word="nettoyer"><span class="ct">nett<b>oy</b>er</span></span>
+        <span class="word-chip" data-word="le web"><span class="ct">le <b>w</b>eb</span></span>
+      </div>
+    </div>
+    <!-- [j] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="yeux" title="Écouter ce son">▶</button></div>
+      <div class="cell">
+        <span class="graphie">i, y (+ voy. orale)</span>
+        <span class="graphie">il, ill</span>
+      </div>
+      <div class="cell">
+        <span class="word-chip" data-word="le ciel"><span class="ct">le c<b>ie</b>l</span></span>
+        <span class="word-chip" data-word="crier"><span class="ct">cr<b>i</b>er</span></span>
+        <span class="word-chip" data-word="du yoga"><span class="ct">du <b>y</b>oga</span></span>
+        <span class="word-chip" data-word="envoyez"><span class="ct">env<b>oy</b>ez</span></span>
+        <span class="word-chip" data-word="un travail"><span class="ct">un trav<b>ail</b></span></span>
+        <span class="word-chip" data-word="une feuille"><span class="ct">une feu<b>ill</b>e</span></span>
+      </div>
+    </div>
+  </div><!-- /semi-voyelles -->
+
+  <!-- CONSONNES -->
+  <div class="section-card">
+    <div class="section-title consonnes">
+      <span>🔴</span> Les consonnes
+    </div>
+    <div class="tbl-head">
+      <span>🔊</span><span>Ça s'écrit…</span><span>Comme dans…</span>
+    </div>
+
+    <!-- [p] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="papa" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">p, pp</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un père"><span class="ct">un père</span></span>
+        <span class="word-chip" data-word="apprendre"><span class="ct">a<b>pp</b>rendre</span></span>
+      </div>
+    </div>
+    <!-- [b] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="bébé" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">b, bb</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un bébé"><span class="ct">un <b>b</b>é<b>b</b>é</span></span>
+      </div>
+    </div>
+    <!-- [t] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="tortue" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">t, tt, th</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="une tente"><span class="ct">une <b>t</b>en<b>t</b>e</span></span>
+        <span class="word-chip" data-word="une fourchette"><span class="ct">une fourche<b>tt</b>e</span></span>
+        <span class="word-chip" data-word="sympathique"><span class="ct">sympa<b>th</b>ique</span></span>
+      </div>
+    </div>
+    <!-- [d] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="dodo" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">d, dd</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="devant"><span class="ct"><b>d</b>evant</span></span>
+        <span class="word-chip" data-word="une addition"><span class="ct">une a<b>dd</b>i<b>ti</b>on</span></span>
+      </div>
+    </div>
+    <!-- [k] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="cadeau" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">ca, co, cu, cc, k, qu, ch</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un cadeau"><span class="ct">un <b>c</b>adeau</span></span>
+        <span class="word-chip" data-word="une couleur"><span class="ct">une <b>c</b>ouleur</span></span>
+        <span class="word-chip" data-word="une culotte"><span class="ct">une <b>c</b>ulotte</span></span>
+        <span class="word-chip" data-word="un accueil"><span class="ct">un accueil</span></span>
+        <span class="word-chip" data-word="un kilo"><span class="ct">un <b>k</b>ilo</span></span>
+        <span class="word-chip" data-word="pourquoi"><span class="ct">pour<b>qu</b>oi</span></span>
+        <span class="word-chip" data-word="un chœur"><span class="ct">un <b>ch</b>œur</span></span>
+      </div>
+    </div>
+    <!-- [g] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="gare" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">g, ga, go, gue, gui</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="grand"><span class="ct"><b>gr</b>and</span></span>
+        <span class="word-chip" data-word="un gâteau"><span class="ct">un <b>g</b>âteau</span></span>
+        <span class="word-chip" data-word="une guitare"><span class="ct">une <b>gui</b>tare</span></span>
+      </div>
+    </div>
+    <!-- [f] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="café" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">f, ff, ph</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un café"><span class="ct">un ca<b>f</b>é</span></span>
+        <span class="word-chip" data-word="un coiffeur"><span class="ct">un coi<b>ff</b>eur</span></span>
+        <span class="word-chip" data-word="une photo"><span class="ct">une <b>ph</b>oto</span></span>
+      </div>
+    </div>
+    <!-- [v] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="vélo" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">v, w</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un vélo"><span class="ct">un <b>v</b>élo</span></span>
+        <span class="word-chip" data-word="un wagon"><span class="ct">un <b>w</b>agon</span></span>
+      </div>
+    </div>
+    <!-- [s] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="soleil" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">s, ss, c, ci, cy, ce, ti, x</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="sel"><span class="ct"><b>s</b>el</span></span>
+        <span class="word-chip" data-word="danser"><span class="ct">dan<b>s</b>er</span></span>
+        <span class="word-chip" data-word="un poisson"><span class="ct">un poi<b>ss</b>on</span></span>
+        <span class="word-chip" data-word="les sciences"><span class="ct">les s<b>c</b>iences</span></span>
+        <span class="word-chip" data-word="ça"><span class="ct"><b>ç</b>a</span></span>
+        <span class="word-chip" data-word="un cinéma"><span class="ct">un <b>ci</b>néma</span></span>
+        <span class="word-chip" data-word="une bicyclette"><span class="ct">une bi<b>cy</b>clette</span></span>
+        <span class="word-chip" data-word="une addition"><span class="ct">une addition</span></span>
+        <span class="word-chip" data-word="dix"><span class="ct">di<b>x</b></span></span>
+      </div>
+    </div>
+    <!-- [z] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="zéro" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">z, s</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un zoo"><span class="ct">un <b>z</b>oo</span></span>
+        <span class="word-chip" data-word="une usine"><span class="ct">une u<b>s</b>ine</span></span>
+      </div>
+    </div>
+    <!-- [ʃ] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="chat" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">ch, sch</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un chien"><span class="ct">un <b>ch</b>ien</span></span>
+        <span class="word-chip" data-word="un schéma"><span class="ct">un <b>sch</b>éma</span></span>
+      </div>
+    </div>
+    <!-- [ʒ] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="jardin" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">j, ge, gea, geo</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="un jardin"><span class="ct">un <b>j</b>ardin</span></span>
+        <span class="word-chip" data-word="imaginer"><span class="ct">ima<b>g</b>iner</span></span>
+        <span class="word-chip" data-word="la gymnastique"><span class="ct">la <b>g</b>ymnastique</span></span>
+        <span class="word-chip" data-word="manger"><span class="ct">man<b>g</b>er</span></span>
+        <span class="word-chip" data-word="mangeant"><span class="ct">man<b>ge</b>ant</span></span>
+        <span class="word-chip" data-word="mangeons"><span class="ct">man<b>ge</b>ons</span></span>
+      </div>
+    </div>
+    <!-- /R/ -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="rue" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">r, rr, rh</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="regarder"><span class="ct"><b>r</b>egar<b>d</b>er</span></span>
+        <span class="word-chip" data-word="prendre"><span class="ct">p<b>r</b>end<b>r</b>e</span></span>
+        <span class="word-chip" data-word="un verre"><span class="ct">un ve<b>rr</b>e</span></span>
+        <span class="word-chip" data-word="un rhume"><span class="ct">un <b>rh</b>ume</span></span>
+      </div>
+    </div>
+    <!-- [l] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="lit" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">l, ll</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="la"><span class="ct"><b>l</b>a</span></span>
+        <span class="word-chip" data-word="elle"><span class="ct">e<b>ll</b>e</span></span>
+      </div>
+    </div>
+    <!-- [m] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="maman" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">m, mm</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="mais"><span class="ct"><b>m</b>ais</span></span>
+        <span class="word-chip" data-word="une femme"><span class="ct">une fe<b>mm</b>e</span></span>
+      </div>
+    </div>
+    <!-- [n] -->
+    <div class="sound-row">
+      <div class="cell cell-play"><button class="play-btn" data-word="nez" title="Écouter ce son">▶</button></div>
+      <div class="cell"><span class="graphie">n, nn</span></div>
+      <div class="cell">
+        <span class="word-chip" data-word="non"><span class="ct"><b>n</b>o<b>n</b></span></span>
+        <span class="word-chip" data-word="italienne"><span class="ct">italie<b>nn</b>e</span></span>
+      </div>
+    </div>
+
+  </div><!-- /consonnes -->
+
+</div><!-- /colonne droite -->
+
+</main>
+
+<footer>
+  Phonétique interactive — Web Speech API (fr-FR) — fonctionne hors ligne ✓
+</footer>
+
+<div id="toast"></div>
+
+<script>
+  // ── STATE ────────────────────────────────────────────────────────────────
+  let allVoices = [];
+  let selectedVoice = null;
+  let speechRate = 1.0;
+  let currentChip = null;
+  let voicesReady = false;
+
+  const voiceSelect = document.getElementById('voiceSelect');
+
+  // ── TOAST ────────────────────────────────────────────────────────────────
+  const toast = document.getElementById('toast');
+  let toastTimer;
+  function showToast(msg, duration = 3500) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  // ── VOICE LOADING ─────────────────────────────────────────────────────────
+  // Priority: fr-FR > fr-CH > fr-BE > fr-CA > fr-* > any
+  const PREFERRED_LANGS = ['fr-FR', 'fr-CH', 'fr-BE', 'fr-CA'];
+
+  function sortVoices(voices) {
+    return [...voices].sort((a, b) => {
+      const ai = PREFERRED_LANGS.indexOf(a.lang);
+      const bi = PREFERRED_LANGS.indexOf(b.lang);
+      const aScore = ai === -1 ? 99 : ai;
+      const bScore = bi === -1 ? 99 : bi;
+      if (aScore !== bScore) return aScore - bScore;
+      // Within same lang, prefer non-network voices (local = faster/offline)
+      if (a.localService !== b.localService) return a.localService ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function buildVoiceUI(voices) {
+    const frVoices = voices.filter(v => v.lang.startsWith('fr'));
+    const googleFr = frVoices.filter(v => v.name.toLowerCase().includes('google'));
+    // Use only Google voices if available, otherwise fall back to all French voices
+    const voicePool = googleFr.length > 0 ? googleFr : frVoices;
+    const sorted = sortVoices(voicePool.length > 0 ? voicePool : voices);
+
+    voiceSelect.innerHTML = '';
+    sorted.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      const flag = v.lang === 'fr-FR' ? '🇫🇷' : v.lang === 'fr-CH' ? '🇨🇭' : v.lang === 'fr-BE' ? '🇧🇪' : v.lang === 'fr-CA' ? '🇨🇦' : '🌐';
+      opt.textContent = `${flag} ${v.name}`;
+      voiceSelect.appendChild(opt);
+    });
+
+    if (!selectedVoice) {
+      selectedVoice = sorted[0] || null;
+    }
+
+    if (googleFr.length === 0 && frVoices.length > 0) {
+      showToast('ℹ️ Voix Google non trouvée — affichage de toutes les voix françaises');
+    } else if (frVoices.length === 0) {
+      showToast('⚠️ Aucune voix française détectée');
+    }
+    voicesReady = true;
+  }
+
+  function loadVoices() {
+    allVoices = speechSynthesis.getVoices();
+    if (allVoices.length > 0) {
+      buildVoiceUI(allVoices);
+    }
+  }
+
+  // Chrome loads voices async; Firefox/Safari load sync
+  speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+  // Fallback: retry after short delay for Chrome
+  setTimeout(loadVoices, 300);
+  setTimeout(loadVoices, 1000);
+
+  voiceSelect.addEventListener('change', () => {
+    selectedVoice = allVoices.find(v => v.name === voiceSelect.value) || null;
+  });
+
+  // ── SPEED BUTTONS ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      speechRate = parseFloat(btn.dataset.speed);
+    });
+  });
+
+  // ── CHROME BUG WORKAROUND ─────────────────────────────────────────────────
+  // Chrome pauses speechSynthesis after ~15s of inactivity. Keep it alive.
+  setInterval(() => {
+    if (!speechSynthesis.speaking) {
+      speechSynthesis.resume();
+    }
+  }, 10000);
+
+  // ── SPEAK ────────────────────────────────────────────────────────────────
+  function clearCurrentChip() {
+    if (currentChip) {
+      currentChip.classList.remove('playing');
+      currentChip = null;
+    }
+  }
+
+  function speak(text, triggerEl) {
+    // If already speaking this element → stop
+    if (currentChip === triggerEl && speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      clearCurrentChip();
+      return;
+    }
+
+    // Stop whatever is playing
+    speechSynthesis.cancel();
+    clearCurrentChip();
+
+    // Small delay after cancel — Chrome needs a tick to reset
+    setTimeout(() => {
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = selectedVoice ? selectedVoice.lang : 'fr-FR';
+      utt.rate = speechRate;
+      utt.pitch = 1;
+      utt.volume = 1;
+
+      if (selectedVoice) {
+        utt.voice = selectedVoice;
+      }
+
+      triggerEl.classList.add('playing');
+      currentChip = triggerEl;
+
+      utt.onend = () => clearCurrentChip();
+      utt.onerror = (e) => {
+        clearCurrentChip();
+        if (e.error !== 'interrupted') {
+          showToast('⚠️ Erreur audio : ' + e.error);
+        }
+      };
+
+      // Resume in case Chrome paused the engine
+      speechSynthesis.resume();
+      speechSynthesis.speak(utt);
+    }, 80);
+  }
+
+  // ── ATTACH HANDLERS ──────────────────────────────────────────────────────
+  document.querySelectorAll('.word-chip, .play-btn').forEach(el => {
+    el.addEventListener('click', () => speak(el.dataset.word, el));
+  });
+
+  // ── CHECK SUPPORT ────────────────────────────────────────────────────────
+  if (!window.speechSynthesis) {
+    document.querySelector('.voice-bar').innerHTML =
+      '<span style="color:#c0392b">⚠️ Votre navigateur ne supporte pas la synthèse vocale. Essayez Chrome ou Safari.</span>';
+  }
+</script>
+
+</body>
+</html>
